@@ -1,71 +1,113 @@
 import tkinter as tk
-from tkinter import ttk # Import ttk for the Combobox (dropdown)
-import pyttsx3
+from tkinter import ttk
+import threading
+import queue
+import asyncio
+import edge_tts
+import pygame
+import io
+import os
 
-try:
-    temp_engine = pyttsx3.init()
-    voices = temp_engine.getProperty('voices')
-    voice_map = {voice.name: voice.id for voice in voices}
-    voice_names = list(voice_map.keys())
-    del temp_engine
-except Exception as e:
-    print(f"Error fetching voices: {e}")
-    voice_map = {}
-    voice_names = ["Default, Microsoft Haruka Desktop - Japanese"]
+VOICE_OPTIONS = {
+    "Filipino (Female) - Blessica": "fil-PH-BlessicaNeural",
+    "Filipino (Male) - Angelo": "fil-PH-AngeloNeural",
+    "English (Female) - Aria": "en-US-AriaNeural",
+    "English (Male) - Guy": "en-US-GuyNeural",
+    "English (Female) - Jenny": "en-US-JennyNeural",
+    "Japanese (Female) - Nanami": "ja-JP-NanamiNeural",
+}
 
-def speak_text(event=None):
-    text_to_speak = text_box.get("1.0", tk.END).strip()
-    
-    selected_voice_name = voice_dropdown.get()
-    
-    if text_to_speak:
+msg_queue = queue.Queue()
+
+def play_audio_data(audio_data):
+    try:
+        sound_file = io.BytesIO(audio_data)
+        pygame.mixer.music.load(sound_file)
+        pygame.mixer.music.play()
+        
+    except Exception as e:
+        print(f"Playback Error: {e}")
+
+async def tts_loop():
+    while True:
         try:
-            engine = pyttsx3.init()
+            data = await asyncio.to_thread(msg_queue.get)
+            if data is None: break # Exit signal
             
-            engine.setProperty('rate', 150) 
-            engine.setProperty('volume', 0.9) 
+            text, voice_short_name = data
             
-            if selected_voice_name in voice_map:
-                voice_id = voice_map[selected_voice_name]
-                engine.setProperty('voice', voice_id)
+            communicate = edge_tts.Communicate(text, voice_short_name)
             
-            engine.say(text_to_speak)
+            audio_bytes = b""
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    audio_bytes += chunk["data"]
             
-            engine.runAndWait()
-            
-            engine.stop()
+            if audio_bytes:
+                play_audio_data(audio_bytes)
+                
+            msg_queue.task_done()
             
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"Cloud TTS Error: {e}")
 
-    if event:
+def start_background_loop():
+    pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+    
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(tts_loop())
+
+threading.Thread(target=start_background_loop, daemon=True).start()
+
+def get_selected_voice_code():
+    name = voice_dropdown.get()
+    return VOICE_OPTIONS.get(name, "en-US-AriaNeural")
+
+def handle_space(event):
+    if mode_var.get() == "stream":
+        text = text_box.get("1.0", tk.END).strip()
+        if text:
+            msg_queue.put((text, get_selected_voice_code()))
+        text_box.delete("1.0", tk.END)
         return "break"
+    return None
+
+def handle_enter(event):
+    text = text_box.get("1.0", tk.END).strip()
+    if text:
+        msg_queue.put((text, get_selected_voice_code()))
+    text_box.delete("1.0", tk.END)
+    return "break"
 
 root = tk.Tk()
-root.title("On-Top TTS")
-
+root.title("Cloud TTS (Filipino Support)")
 root.wm_attributes("-topmost", 1)
+root.geometry("380x280")
 
-root.geometry("350x250")
+frame = tk.Frame(root)
+frame.pack(pady=10)
 
-voice_label = tk.Label(root, text="Select Voice:")
-voice_label.pack(pady=(10, 0))
+tk.Label(frame, text="Voice:").pack(side="left", padx=5)
+voice_names = list(VOICE_OPTIONS.keys())
+voice_dropdown = ttk.Combobox(frame, values=voice_names, state="readonly", width=30)
+voice_dropdown.pack(side="left")
+voice_dropdown.current(0) # Default to first
 
-voice_dropdown = ttk.Combobox(root, values=voice_names, state="readonly", width=40)
-voice_dropdown.pack(pady=5)
+mode_frame = tk.LabelFrame(root, text="Speaking Mode")
+mode_frame.pack(pady=5, padx=10, fill="x")
 
-if voice_names:
-    voice_dropdown.current(0)
+mode_var = tk.StringVar(value="stream")
+tk.Radiobutton(mode_frame, text="Instant (Speak on Space)", 
+               variable=mode_var, value="stream").pack(anchor="w", padx=10)
+tk.Radiobutton(mode_frame, text="Full Sentence (Speak on Enter)", 
+               variable=mode_var, value="sentence").pack(anchor="w", padx=10)
 
-label = tk.Label(root, text="Enter text below and press 'Speak':")
-label.pack(pady=5)
+tk.Label(root, text="Requires Internet Connection", fg="blue", font=("Arial", 8)).pack(pady=(5, 0))
+text_box = tk.Text(root, height=5, width=40, font=("Arial", 12))
+text_box.pack(pady=5, padx=10, fill="both", expand=True)
 
-text_box = tk.Text(root, height=5, width=40, wrap="word")
-text_box.pack(pady=10, padx=10, fill="x", expand=True)
-
-text_box.bind("<Return>", speak_text)
-
-speak_button = tk.Button(root, text="Speak", command=speak_text)
-speak_button.pack(pady=10)
+text_box.bind("<Key-space>", handle_space)
+text_box.bind("<Return>", handle_enter)
 
 root.mainloop()
