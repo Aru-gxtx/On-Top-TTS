@@ -1,3 +1,2 @@
-pyttsx3
 edge-tts
 pygame
