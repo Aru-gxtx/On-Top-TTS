@@ -21,7 +21,6 @@ VOICE_OPTIONS = {
 msg_queue = queue.Queue()
 
 def resample_audio(data, original_rate, target_rate):
-    """Resamples audio data using linear interpolation to match target device rate."""
     if original_rate == target_rate:
         return data
     
