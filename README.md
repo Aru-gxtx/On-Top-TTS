@@ -1,42 +1,39 @@
 # On-Top TTS (Cloud Edition)
 
-**On-Top Stream TTS** is a lightweight text-to-speech utility designed to stay overlaid on your screen. It allows you to quickly type and broadcast speech without minimizing your full-screen applications or games.
+**On-Top TTS** is a lightweight text-to-speech utility designed to stay overlaid on your screen. It allows you to quickly type and broadcast speech to voice chats (Discord, Zoom, Games) while hearing it yourself simultaneously—without minimizing your full-screen applications.
 
 ![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=flat&logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)
 ![Edge TTS](https://img.shields.io/badge/Engine-Edge%20TTS-blueviolet?style=flat)
-![Pygame](https://img.shields.io/badge/Audio-Pygame-yellow?style=flat&logo=python)
+![SoundDevice](https://img.shields.io/badge/Audio-SoundDevice-ff69b4?style=flat)
 
-## Performance Notice (Important)
+## Performance Notice
 
 **It is highly recommended to run this program from the Python Source (`.py`) rather than the Executable (`.exe`).**
 
-The `.exe` version introduces a delay when connecting to the Cloud TTS servers. Running the Python script directly results in significantly faster response times.
+The `.exe` version may introduce a slight delay when connecting to the Cloud TTS servers due to packaging overhead. Running the Python script directly results in the fastest response times.
 
-## Features
+## New Features (Update)
 
-* **Always on Top:** The window floats over all other applications, including full-screen games.
-* **Neural Cloud Voices:** Uses Microsoft Edge's online TTS engine for human-like quality.
+* **🎧 Dual Audio Routing (Splitter):** The app now has **two** output selectors. It plays audio to your speakers (so you hear it) AND to a virtual cable (so they hear it) at the exact same time. No more Windows Mixer hacks!
+* **⚡ Speed Control:** Includes a slider to adjust speech speed from -50% (Very Slow) to +50% (Very Fast).
+* **🔧 Auto-Resampling:** Automatically detects and fixes sample rate mismatches (e.g., 24kHz vs 48kHz) to prevent crashes and silence.
 * **Two Speaking Modes:**
-    * **Instant (Stream):** Speaks automatically every time you press **Space** (for fast, flowing conversation).
+    * **Instant (Stream):** Speaks automatically every time you press **Space**.
     * **Full Sentence:** Waits until you press **Enter** to speak the whole line.
-* **Smart Input:** Automatically clears the text box after speaking so you can keep typing.
 
-## Audio Routing Setup
+## Audio Setup (How to talk to others)
 
-To use this application as a "Microphone", you must use a **Virtual Audio Cable**.
+To use this application as a "Microphone" for Discord/Zoom/Games, you need a **Virtual Audio Cable**.
 
 1.  **Download & Install:** Get a virtual cable driver (e.g., [VB-Audio Virtual Cable](https://vb-audio.com/Cable/)).
-2.  **Set Output (Where the App Speaks):**
-    * Open **Windows Sound Settings** > **App volume and device preferences**.
-    * Find **Python** (or `py.exe`) in the list.
-    * Set the **Output** to **CABLE Input**.
-3.  **Set Input (Where Discord Listens):**
-    * Go to your target app (e.g., Discord > Voice & Video).
-    * Set the **Input Device** (Microphone) to **CABLE Output**.
-
-*Tip: To hear the voice yourself while it plays to others, go to Windows Sound Control Panel > Recording > CABLE Output > Properties > Listen > Check "Listen to this device".*
+2.  **Open the App:**
+    * **Dropdown 1 (Your Ears):** Select your actual Headphones/Speakers.
+    * **Dropdown 2 (Their Ears):** Select **CABLE Input**.
+3.  **Configure Discord/Game:**
+    * Go to your target app's settings (Voice & Video).
+    * Set the **Input Device (Microphone)** to **CABLE Output**.
 
 ## Getting Started
 
@@ -44,13 +41,14 @@ To use this application as a "Microphone", you must use a **Virtual Audio Cable*
 
 * Python 3.x.x installed.
 * Internet Connection (Required for Cloud Voices).
+* [VB-Cable](https://vb-audio.com/Cable/) (Highly Recommended).
 
 ### Installation (Recommended Method)
 
 Running from source ensures the fastest TTS response time.
 
 1.  Clone this repository or download the script.
-2.  Install the required dependencies:
+2.  Install the new dependencies:
     ```bash
     pip install -r requirements.txt
     ```
@@ -59,23 +57,11 @@ Running from source ensures the fastest TTS response time.
     python on_top_tts.py
     ```
 
-### Installation (Executable Method)
-
-*Note: This method may be slower for Cloud TTS fetching.*
-
-1.  Go to the **Releases** section.
-2.  Download `on_top_tts.exe`.
-3.  Run the file.
-
 ## Usage
 
-1.  **Select Voice:** Choose a voice from the dropdown.
-2.  **Select Mode:**
-    * **Instant:** Best for gaming. Type a word and hit Space; it speaks immediately.
-    * **Full Sentence:** Best for reading prepared text. Type everything, then hit Enter.
-3.  **Type & Go:** The text box will clear automatically after sending, keeping you ready for the next word.
-
-## Troubleshooting
-
-* **No Sound?** Check that your Python output is routed to the correct device (Headphones or Cable Input) in Windows Mixer settings.
-* **Delay?** Ensure you are running the `.py` file instead of the `.exe`.
+1.  **Select Devices:** Set where you want the sound to go (usually Headphones + Cable Input).
+2.  **Select Voice:** Choose a Neural voice from the dropdown.
+3.  **Set Speed:** Adjust the slider if you want the voice faster or slower.
+4.  **Type & Go:**
+    * Use **Space** mode for fast conversation.
+    * Use **Enter** mode for prepared sentences.
